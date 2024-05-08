@@ -13,26 +13,28 @@ import weganskieImage from '../images/weganskie.jpg';
 import wloskaImage from '../images/wloska.jpg';
 import zupaImage from '../images/zupa.jpg';
 
-const defaultImage = '/path-to-default-image.png'; // Upewnij się, że ścieżka jest poprawna
+const defaultImage = '/path-to-default-image.png'; 
 
-const Categories = () => {
+const Categories = ({ selectedCity, onSelectCategory }) => {
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null); 
 
   useEffect(() => {
-    fetch('http://localhost:5000/categories')
-      .then(response => response.json())
-      .then(data => {
-        const categoriesData = data.map((category, index) => ({
-          id: index,
-          title: category.name,
-          imageUrl: defaultImage, // Możesz tutaj ustawić domyślny obraz
-          count: category.count, 
-        }));
-        setCategories(categoriesData);
-      })
-      .catch(error => console.error('Error:', error));
-  }, []);
-
+    if (selectedCity) {
+      fetch(`http://localhost:5000/categories?city=${selectedCity}`)
+        .then(response => response.json())
+        .then(data => {
+          const categoriesData = data.map((category, index) => ({
+            id: index,
+            title: category.name,
+            imageUrl: defaultImage, 
+            count: category.count, 
+          }));
+          setCategories(categoriesData);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+  }, [selectedCity]);
 
   const images = {
     Burgery: burgerImage,
@@ -49,11 +51,17 @@ const Categories = () => {
     Zupa: zupaImage,
   };
 
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category); 
+    console.log('Selected category:', category); 
+    onSelectCategory(category);
+  };
+
   return (
     <Grid container spacing={2} sx={{ mb: 3 }}>
       {categories.map((category) => (
         <Grid item xs={12} sm={6} md={2.4} key={category.title}>
-          <Card>
+          <Card onClick={() => handleCategoryClick(category.title)}> 
             <CardActionArea>
               <CardMedia
                 component="img"
@@ -67,7 +75,7 @@ const Categories = () => {
                   {category.title}
                 </Typography>
                 <Typography color="text.secondary" sx= {{fontSize: 20}}>
-                  Miejsca: {category.count}
+                  Places: {category.count}
                 </Typography>
               </CardContent>
             </CardActionArea>
