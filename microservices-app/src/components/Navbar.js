@@ -3,6 +3,8 @@ import { AppBar, Toolbar, Button, TextField, Box, Typography, Select, MenuItem, 
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 import logo from '../images/logo.png';
+import LoginForm from './LoginForm'; 
+import RegisterForm from './RegisterForm'; // Adjust the path based on your file structure
 
 const Navbar = ({ onSelectCity }) => {
   const [cities, setCities] = useState([]);
@@ -87,8 +89,10 @@ const Navbar = ({ onSelectCity }) => {
         />
         
         <Box sx={{ display: 'flex', alignItems: 'center', '& > :not(style)': { mr: 2 } }}>
-          <Button color="primary" sx={{ fontSize: '1.1rem' , fontWeight: 500 }} >Login</Button>
-          <Button color="secondary" sx={{ fontSize: '1.1rem', fontWeight: 500 }} >Register</Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', '& > :not(style)': { mr: 2 } }}>
+          <LoginForm />
+          <RegisterForm />
+        </Box>
         </Box>
       </Toolbar>
     </AppBar>
