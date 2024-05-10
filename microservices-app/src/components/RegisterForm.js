@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, InputAdornment, Typography, Box, Stepper, Step, StepLabel } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, InputAdornment, Typography, Box, Stepper, Step, StepLabel, FormHelperText } from '@mui/material';
 import { AccountCircle, Email, Phone, Cake, Lock, Person } from '@mui/icons-material';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './toastStyles.css';
 
 const RegisterForm = () => {
-    const [activeStep, setActiveStep] = useState(0);
+    const [activeStep, setActiveStep] = useState(null);
     const [userData, setUserData] = useState({
         phone: '',
         firstName: '',
@@ -17,6 +17,7 @@ const RegisterForm = () => {
         password: '',
         confirmPassword: ''
     });
+    const [errors, setErrors] = useState({});
 
     const handleNext = () => {
         if (activeStep < 2) setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -26,44 +27,107 @@ const RegisterForm = () => {
         if (activeStep > 0) setActiveStep((prevActiveStep) => prevActiveStep - 1);
     };
 
+    const isStepComplete = () => {
+        switch (activeStep) {
+            case 0:
+                return userData.email !== '' && userData.phone !== '';
+            case 1:
+                return userData.firstName !== '' && userData.lastName !== '' && userData.dob !== '';
+            case 2:
+                return userData.username !== '' && userData.password !== '' && userData.confirmPassword !== '';
+            default:
+                return false;
+        }
+    };
+
+    const validateField = (name, value) => {
+        switch(name) {
+            case 'email':
+                if (!/\S+@\S+\.\S+/.test(value)) {
+                    return 'Invalid email format';
+                }
+                break;
+            case 'phone':
+                if (!/^\d{9,}$/.test(value)) {
+                    return 'Phone number must be at least 9 digits';
+                }
+                break;
+            case 'firstName':
+            case 'lastName':
+            case 'username':
+                if (!value.trim()) {
+                    return 'This field is required';
+                }
+                break;
+            case 'password':
+                if (value.length < 8) {
+                    return 'Password must be at least 8 characters';
+                }
+                break;
+            case 'confirmPassword':
+                if (value !== userData.password) {
+                    return 'Passwords do not match';
+                }
+                break;
+            default:
+                return '';
+        }
+        return '';
+    };
+
+    const handleBlur = (prop) => (event) => {
+        const { value } = event.target;
+        const error = validateField(prop, value);
+        setErrors({...errors, [prop]: error});
+    };
+
     const handleChange = (prop) => (event) => {
-        setUserData({ ...userData, [prop]: event.target.value });
+        let value = event.target.value;
+        if (prop === 'phone') {
+            value = value.replace(/\D/g, ''); 
+        }
+        setUserData({ ...userData, [prop]: value });
+        if (errors[prop]) {
+            const error = validateField(prop, value);
+            setErrors({...errors, [prop]: error});
+        }
     };
 
     const handleSubmit = (event) => {
         event.preventDefault();
-    
-        // Sprawdź, czy hasła są takie same
-        if (userData.password !== userData.confirmPassword) {
-            toast.error("Passwords do not match!");
-            return;
+        let isValid = true;
+        const newErrors = {};
+        Object.keys(userData).forEach(key => {
+            const error = validateField(key, userData[key]);
+            if (error) {
+                newErrors[key] = error;
+                isValid = false;
+            }
+        });
+        setErrors(newErrors);
+
+        if (!isValid) {
+            return; // Stop submission if validation fails
         }
-    
-        // Usuń confirmPassword z danych wysyłanych do serwera
+
         const { confirmPassword, ...dataToSend } = userData;
-    
-        console.log(JSON.stringify(dataToSend))
-        console.log(dataToSend.firstName);
+        console.log(JSON.stringify(dataToSend));
+
         fetch('http://localhost:5002/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          
-          body: JSON.stringify(dataToSend),
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSend),
         })
         .then(response => response.json())
         .then(data => console.log(data))
         .catch((error) => {
-          console.error('Error:', error);
+            console.error('Error:', error);
         });
     };
 
-    const steps = [
-        'Phone Number',
-        'Personal Details',
-        'Account Details'
-    ];
+    const steps = ['Phone Number', 'Personal Details', 'Account Details'];
 
     return (
         <div>
@@ -76,90 +140,94 @@ const RegisterForm = () => {
                 fullWidth
                 PaperProps={{
                     style: { 
-                        borderRadius: '50px !important', // Możesz zwiększyć wartość, aby uzyskać bardziej zaokrąglone rogi.
-                        padding: '20px'  // Dodatkowe opcjonalne padding wewnętrzne, aby treści nie były zbyt blisko brzegów.
+                        borderRadius: '50px !important',
+                        padding: '10px'
                     }
                 }}
             >
                 <DialogTitle>
-                    <Box textAlign="center" sx={{ marginTop: '20px'}}>
-                        <AccountCircle style={{ fontSize: 120, color: '#fca311' }} />
+                    <Box textAlign="center" sx={{ marginTop: '0px'}}>
+                        <AccountCircle style={{ fontSize: 120, color: '#fca311', marginBottom: '-20px' }} />
                         <Typography sx={{ color: '#fca311', fontSize: '6vh' }}>Register</Typography>
                     </Box>
                 </DialogTitle>
                 <DialogContent style={{ padding: '50px' }}>
-                <Stepper activeStep={activeStep} alternativeLabel sx={{
-                    '.MuiStepIcon-root': { color: '#fca311' }, // Active and completed color
-                    '.MuiStepIcon-root.Mui-active': { color: '#fca311' }, // Currently active step color
-                    '.MuiStepIcon-root.Mui-completed': { color: '#fca311' }, // Completed step color
-                    '.MuiStepIcon-root': { color: '#fcc97c' }, // Default color for steps that are not yet active
-                    '.MuiStepLabel-label': { fontSize: '1rem' }, // Font size for labels
-
-                    marginBottom: '3rem',
-                    marginTop: '-20px'
+                    <Stepper activeStep={activeStep} alternativeLabel sx={{
+                        '.MuiStepIcon-root': { color: '#fca311' },
+                        '.MuiStepIcon-root.Mui-active': { color: '#fca311' },
+                        '.MuiStepIcon-root.Mui-completed': { color: '#fca311' },
+                        '.MuiStepIcon-root': { color: '#fcc97c' },
+                        '.MuiStepLabel-label': { fontSize: '1rem' },
+                        marginBottom: '20px',
+                        marginTop: '-40px'
                     }}>
-                    {steps.map((label) => (
-                        <Step key={label}>
-                        <StepLabel>{label}</StepLabel>
-                        </Step>
-                    ))}
+                        {steps.map((label) => (
+                            <Step key={label}>
+                                <StepLabel>{label}</StepLabel>
+                            </Step>
+                        ))}
                     </Stepper>
-                    {activeStep === 0 && (
-                        <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            id="email"
-                            label="Email"
-                            type="email"
-                            fullWidth
-                            variant="standard"
-                            value={userData.email}
-                            onChange={handleChange('email')}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Email style={{ color: '#fca311' }} />
-                                    </InputAdornment>
-                                ),
-                                sx: { fontSize: '2rem' }
-                            }}
-                            InputLabelProps={{
-                                style: { color: '#fca311', fontSize: '2rem', top: '-13px' },
-                                shrink: true
-                            }}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            id="phone"
-                            label="Phone"
-                            type="tel"
-                            fullWidth
-                            variant="standard"
-                            value={userData.phone}
-                            onChange={handleChange('phone')}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Phone style={{ color: '#fca311' }} />
-                                    </InputAdornment>
-                                ),
-                                sx: { fontSize: '2rem' }
-                            }}
-                            InputLabelProps={{
-                                style: { color: '#fca311', fontSize: '2rem', top: '-13px' },
-                                shrink: true
-                            }}
-                        />
-                        </Grid>
-                        </Grid>
-                    )}
-                    {activeStep === 1 && (
-                        <Grid container spacing={2}>
+                    <Grid container spacing={2}>
+                        {activeStep === 0 && <>
+                            <Grid item xs={12}>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="email"
+                                    label="Email"
+                                    type="email"
+                                    fullWidth
+                                    variant="standard"
+                                    value={userData.email}
+                                    onChange={handleChange('email')}
+                                    onBlur={handleBlur('email')}
+                                    error={!!errors.email}
+                                    helperText={errors.email}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <Email style={{ color: '#fca311' }} />
+                                            </InputAdornment>
+                                        ),
+                                        sx: { fontSize: '1.75rem' }
+                                    }}
+                                    InputLabelProps={{
+                                        style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
+                                        shrink: true
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                id="phone"
+                                label="Phone"
+                                type="tel"
+                                fullWidth
+                                variant="standard"
+                                value={userData.phone}
+                                onChange={handleChange('phone')}
+                                onBlur={handleBlur('phone')}
+                                error={!!errors.phone}
+                                helperText={errors.phone}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Phone style={{ color: '#fca311' }} />
+                                        </InputAdornment>
+                                    ),
+                                    sx: { fontSize: '1.75rem' },
+                                    inputMode: 'numeric' // Wskazuje, że klawiatura numeryczna powinna być używana na urządzeniach mobilnych
+                                }}
+                                InputLabelProps={{
+                                    style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
+                                    shrink: true
+                                }}
+                            />
+                            </Grid>
+                        </>}
+                        {activeStep === 1 && <>
                             <Grid item xs={6}>
                                 <TextField
                                     autoFocus
@@ -171,16 +239,19 @@ const RegisterForm = () => {
                                     variant="standard"
                                     value={userData.firstName}
                                     onChange={handleChange('firstName')}
+                                    onBlur={handleBlur('firstName')}
+                                    error={!!errors.firstName}
+                                    helperText={errors.firstName}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
                                                 <Person style={{ color: '#fca311' }} />
                                             </InputAdornment>
                                         ),
-                                        sx: { fontSize: '2rem' }
+                                        sx: { fontSize: '1.75rem' }
                                     }}
                                     InputLabelProps={{
-                                        style: { color: '#fca311', fontSize: '2rem', top: '-13px' },
+                                        style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
                                         shrink: true
                                     }}
                                 />
@@ -195,16 +266,19 @@ const RegisterForm = () => {
                                     variant="standard"
                                     value={userData.lastName}
                                     onChange={handleChange('lastName')}
+                                    onBlur={handleBlur('lastName')}
+                                    error={!!errors.lastName}
+                                    helperText={errors.lastName}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
                                                 <Person style={{ color: '#fca311' }} />
                                             </InputAdornment>
                                         ),
-                                        sx: { fontSize: '2rem' }
+                                        sx: { fontSize: '1.75rem' }
                                     }}
                                     InputLabelProps={{
-                                        style: { color: '#fca311', fontSize: '2rem', top: '-13px' },
+                                        style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
                                         shrink: true
                                     }}
                                 />
@@ -219,24 +293,25 @@ const RegisterForm = () => {
                                     variant="standard"
                                     value={userData.dob}
                                     onChange={handleChange('dob')}
+                                    onBlur={handleBlur('dob')}
+                                    error={!!errors.dob}
+                                    helperText={errors.dob}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
                                                 <Cake style={{ color: '#fca311' }} />
                                             </InputAdornment>
                                         ),
-                                        sx: { fontSize: '2rem' }
+                                        sx: { fontSize: '1.75rem' }
                                     }}
                                     InputLabelProps={{
-                                        style: { color: '#fca311', fontSize: '2rem', top: '-13px' },
+                                        style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
                                         shrink: true
                                     }}
                                 />
                             </Grid>
-                        </Grid>
-                    )}
-                    {activeStep === 2 && (
-                        <Grid container spacing={2}>
+                        </>}
+                        {activeStep === 2 && <>
                             <Grid item xs={12}>
                                 <TextField
                                     margin="dense"
@@ -247,16 +322,19 @@ const RegisterForm = () => {
                                     variant="standard"
                                     value={userData.username}
                                     onChange={handleChange('username')}
+                                    onBlur={handleBlur('username')}
+                                    error={!!errors.username}
+                                    helperText={errors.username}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
                                                 <AccountCircle style={{ color: '#fca311' }} />
                                             </InputAdornment>
                                         ),
-                                        sx: { fontSize: '2rem' }
+                                        sx: { fontSize: '1.75rem' }
                                     }}
                                     InputLabelProps={{
-                                        style: { color: '#fca311', fontSize: '2rem', top: '-13px' },
+                                        style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
                                         shrink: true
                                     }}
                                 />
@@ -271,16 +349,19 @@ const RegisterForm = () => {
                                     variant="standard"
                                     value={userData.password}
                                     onChange={handleChange('password')}
+                                    onBlur={handleBlur('password')}
+                                    error={!!errors.password}
+                                    helperText={errors.password}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
                                                 <Lock style={{ color: '#fca311' }} />
                                             </InputAdornment>
                                         ),
-                                        sx: { fontSize: '2rem' }
+                                        sx: { fontSize: '1.75rem' }
                                     }}
                                     InputLabelProps={{
-                                        style: { color: '#fca311', fontSize: '2rem', top: '-13px' },
+                                        style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
                                         shrink: true
                                     }}
                                 />
@@ -295,30 +376,33 @@ const RegisterForm = () => {
                                     variant="standard"
                                     value={userData.confirmPassword}
                                     onChange={handleChange('confirmPassword')}
+                                    onBlur={handleBlur('confirmPassword')}
+                                    error={!!errors.confirmPassword}
+                                    helperText={errors.confirmPassword}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
                                                 <Lock style={{ color: '#fca311' }} />
                                             </InputAdornment>
                                         ),
-                                        sx: { fontSize: '2rem' }
+                                        sx: { fontSize: '1.75rem' }
                                     }}
                                     InputLabelProps={{
-                                        style: { color: '#fca311', fontSize: '2rem', top: '-13px' },
+                                        style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
                                         shrink: true
                                     }}
                                 />
                             </Grid>
-                        </Grid>
-                    )}
+                        </>}
+                    </Grid>
                 </DialogContent>
-                <DialogActions style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <DialogActions style={{ padding: '0px', display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                         <Button sx={{ fontSize: '1.25rem', minWidth: '150px' }} onClick={() => setActiveStep(null)}>Cancel</Button>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                         {activeStep !== 0 && <Button sx={{ fontSize: '1.25rem', minWidth: '150px' }} onClick={handleBack}>Back</Button>}
-                        {activeStep !== 2 ? <Button variant="contained" sx={{ fontSize: '1.25rem', minWidth: '150px' }} color="secondary" onClick={handleNext}>Next</Button> : <Button variant="contained" sx={{ fontSize: '1.25rem', minWidth: '150px' }} color="secondary" onClick={handleSubmit}>Submit</Button>}
+                        {activeStep !== 2 ? <Button variant="contained" sx={{ fontSize: '1.25rem', minWidth: '150px' }} color="secondary" onClick={handleNext} disabled={!isStepComplete()}>Next</Button> : <Button variant="contained" sx={{ fontSize: '1.25rem', minWidth: '150px' }} color="secondary" onClick={handleSubmit}>Submit</Button>}
                     </div>
                 </DialogActions>
             </Dialog>
