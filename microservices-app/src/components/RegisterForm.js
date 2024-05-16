@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, InputAdornment, Typography, Box, Stepper, Step, StepLabel, FormHelperText } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, InputAdornment, Typography, Box, Stepper, Step, StepLabel } from '@mui/material';
 import { AccountCircle, Email, Phone, Cake, Lock, Person } from '@mui/icons-material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -91,8 +91,6 @@ const RegisterForm = () => {
             setErrors({ ...errors, [prop]: error || '' });
         }
     };
-    
-    
 
     const handleChange = (prop) => (event) => {
         let value = event.target.value;
@@ -175,7 +173,6 @@ const RegisterForm = () => {
             });
         });
     };
-    
 
     const steps = ['Phone Number', 'Personal Details', 'Account Details'];
 
@@ -203,7 +200,6 @@ const RegisterForm = () => {
                 </DialogTitle>
                 <DialogContent style={{ padding: '50px' }}>
                     <Stepper activeStep={activeStep} alternativeLabel sx={{
-                        '.MuiStepIcon-root': { color: '#fca311' },
                         '.MuiStepIcon-root.Mui-active': { color: '#fca311' },
                         '.MuiStepIcon-root.Mui-completed': { color: '#fca311' },
                         '.MuiStepIcon-root': { color: '#fcc97c' },
@@ -248,33 +244,33 @@ const RegisterForm = () => {
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                id="phone"
-                                label="Phone"
-                                type="tel"
-                                fullWidth
-                                variant="standard"
-                                value={userData.phone}
-                                onChange={handleChange('phone')}
-                                onBlur={handleBlur('phone')}
-                                error={!!errors.phone}
-                                helperText={errors.phone}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Phone style={{ color: '#fca311' }} />
-                                        </InputAdornment>
-                                    ),
-                                    sx: { fontSize: '1.75rem' },
-                                    inputMode: 'numeric' // Wskazuje, że klawiatura numeryczna powinna być używana na urządzeniach mobilnych
-                                }}
-                                InputLabelProps={{
-                                    style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
-                                    shrink: true
-                                }}
-                            />
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="phone"
+                                    label="Phone"
+                                    type="tel"
+                                    fullWidth
+                                    variant="standard"
+                                    value={userData.phone}
+                                    onChange={handleChange('phone')}
+                                    onBlur={handleBlur('phone')}
+                                    error={!!errors.phone}
+                                    helperText={errors.phone}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <Phone style={{ color: '#fca311' }} />
+                                            </InputAdornment>
+                                        ),
+                                        sx: { fontSize: '1.75rem' },
+                                        inputMode: 'numeric' // Wskazuje, że klawiatura numeryczna powinna być używana na urządzeniach mobilnych
+                                    }}
+                                    InputLabelProps={{
+                                        style: { color: '#fca311', fontSize: '1.75rem', top: '-13px' },
+                                        shrink: true
+                                    }}
+                                />
                             </Grid>
                         </>}
                         {activeStep === 1 && <>

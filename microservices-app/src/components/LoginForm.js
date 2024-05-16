@@ -1,13 +1,14 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Typography, Box, InputAdornment } from '@mui/material';
 import { AccountCircle, Lock } from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext'; // Zaimportuj hook kontekstu autentykacji
+import { useAuth } from '../context/AuthContext';
 
 const LoginForm = () => {
-  const { login } = useAuth(); // Pobierz funkcję 'login' z kontekstu
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState('');
 
   const handleOpen = () => {
     setOpen(true);
@@ -24,24 +25,26 @@ const LoginForm = () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        username: username,
-        password: password
-      }),
+      body: JSON.stringify({ username, password }),
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.token) { // Sprawdź, czy odpowiedź zawiera token
-        login(username, data.token); // Zaloguj użytkownika za pomocą funkcji z kontekstu
-        setOpen(false); // Zamknij dialog logowania
-      } else {
-        throw new Error('Login failed');
-      }
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-      alert('Login failed: ' + error.message); // Pokaż błąd, jeśli wystąpi
-    });
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Login failed');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.token) {
+          login(username, data.token);
+          setOpen(false);
+        } else {
+          throw new Error('Login failed');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        setError('Login failed: ' + error.message);
+      });
   };
 
   return (
@@ -55,6 +58,7 @@ const LoginForm = () => {
           </Box>
         </DialogTitle>
         <DialogContent style={{ padding: '50px' }}>
+          {error && <Typography color="error">{error}</Typography>}
           <TextField
             autoFocus
             margin="dense"
@@ -102,8 +106,8 @@ const LoginForm = () => {
           />
         </DialogContent>
         <DialogActions style={{ padding: '20px', marginBottom: '20px', justifyContent: 'center' }}>
-        <Button sx={{ fontSize: '1.25rem', minWidth: '150px' }} onClick={handleClose}>Cancel</Button>
-        <Button sx={{ fontSize: '1.25rem', minWidth: '150px' }} variant="contained" color="secondary" onClick={handleSubmit}>Login</Button>
+          <Button sx={{ fontSize: '1.25rem', minWidth: '150px' }} onClick={handleClose}>Cancel</Button>
+          <Button sx={{ fontSize: '1.25rem', minWidth: '150px' }} variant="contained" color="secondary" onClick={handleSubmit}>Login</Button>
         </DialogActions>
       </Dialog>
     </div>

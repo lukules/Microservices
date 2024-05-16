@@ -4,6 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme'; 
 import Main from './components/Main';
 
+
 function App() {
   return (
     <AuthProvider>
