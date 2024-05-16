@@ -5,11 +5,19 @@ import InputAdornment from '@mui/material/InputAdornment';
 import logo from '../images/logo.png';
 import LoginForm from './LoginForm'; 
 import RegisterForm from './RegisterForm'; // Adjust the path based on your file structure
+import { useAuth } from '../context/AuthContext';
+import { IconButton, Menu, ListItemIcon } from '@mui/material';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+
 
 const Navbar = ({ onSelectCity }) => {
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState('');
   const [restaurantNames, setRestaurantNames] = useState([]);
+  const { isAuthenticated, logout } = useAuth();
+  const [anchorEl, setAnchorEl] = useState(null)
 
   useEffect(() => {
     fetch('http://localhost:5000/cities') 
@@ -34,6 +42,14 @@ const Navbar = ({ onSelectCity }) => {
     const selectedValue = event.target.value;
     setSelectedCity(selectedValue);
     onSelectCity(selectedValue);
+  };
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
   };
 
   return (
@@ -90,8 +106,45 @@ const Navbar = ({ onSelectCity }) => {
         
         <Box sx={{ display: 'flex', alignItems: 'center', '& > :not(style)': { mr: 2 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', '& > :not(style)': { mr: 2 } }}>
-          <LoginForm />
-          <RegisterForm />
+        {isAuthenticated ? (
+            <>
+              <IconButton
+                onClick={handleMenu}
+                color="inherit"
+              >
+                <AccountCircleIcon />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem onClick={handleClose}>
+                  <ListItemIcon>
+                    <SettingsIcon fontSize="small" />
+                  </ListItemIcon>
+                  <Typography variant="inherit">Settings</Typography>
+                </MenuItem>
+                <MenuItem onClick={handleClose}>
+                  <ListItemIcon>
+                    <AccountCircleIcon fontSize="small" />
+                  </ListItemIcon>
+                  <Typography variant="inherit">Profile</Typography>
+                </MenuItem>
+                <MenuItem onClick={() => { logout(); handleClose(); }}>
+                  <ListItemIcon>
+                    <ExitToAppIcon fontSize="small" />
+                  </ListItemIcon>
+                  <Typography variant="inherit">Log out</Typography>
+                </MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <>
+              <LoginForm />
+              <RegisterForm />
+            </>
+          )}
         </Box>
         </Box>
       </Toolbar>

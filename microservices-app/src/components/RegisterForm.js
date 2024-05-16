@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, InputAdornment, Typography, Box, Stepper, Step, StepLabel, FormHelperText } from '@mui/material';
 import { AccountCircle, Email, Phone, Cake, Lock, Person } from '@mui/icons-material';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './toastStyles.css';
 
@@ -75,11 +75,24 @@ const RegisterForm = () => {
         return '';
     };
 
-    const handleBlur = (prop) => (event) => {
-        const { value } = event.target;
-        const error = validateField(prop, value);
-        setErrors({...errors, [prop]: error});
+    const checkUniqueness = async (field, value) => {
+        const response = await fetch(`http://localhost:5002/check-unique?field=${field}&value=${value}`);
+        const data = await response.json();
+        return data.isUnique;
     };
+    
+    const handleBlur = (prop) => async (event) => {
+        const { value } = event.target;
+        const isUnique = await checkUniqueness(prop, value);
+        if (!isUnique) {
+            setErrors({ ...errors, [prop]: `${prop} is already taken` });
+        } else {
+            const error = validateField(prop, value);
+            setErrors({ ...errors, [prop]: error || '' });
+        }
+    };
+    
+    
 
     const handleChange = (prop) => (event) => {
         let value = event.target.value;
@@ -105,14 +118,22 @@ const RegisterForm = () => {
             }
         });
         setErrors(newErrors);
-
+    
         if (!isValid) {
+            toast.error("Validation failed. Please check your inputs.", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
             return; // Stop submission if validation fails
         }
-
+    
         const { confirmPassword, ...dataToSend } = userData;
-        console.log(JSON.stringify(dataToSend));
-
+    
         fetch('http://localhost:5002/register', {
             method: 'POST',
             headers: {
@@ -120,12 +141,41 @@ const RegisterForm = () => {
             },
             body: JSON.stringify(dataToSend),
         })
-        .then(response => response.json())
-        .then(data => console.log(data))
+        .then(response => {
+            if (response.ok) {
+                return response.json().then(data => {
+                    toast.success(`Registration successful!`, {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                        icon: "🚀"
+                    });
+                    setActiveStep(null); // Close dialog on successful registration
+                });
+            } else {
+                return response.json().then(data => {
+                    throw new Error(data.message || "Unknown error occurred during registration");
+                });
+            }
+        })
         .catch((error) => {
             console.error('Error:', error);
+            toast.error(`Failed to register: ${error.message}`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         });
     };
+    
 
     const steps = ['Phone Number', 'Personal Details', 'Account Details'];
 

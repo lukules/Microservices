@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Typography, Box, InputAdornment } from '@mui/material';
 import { AccountCircle, Lock } from '@mui/icons-material';
+import { useAuth } from '../context/AuthContext'; // Zaimportuj hook kontekstu autentykacji
 
 const LoginForm = () => {
+  const { login } = useAuth(); // Pobierz funkcję 'login' z kontekstu
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [open, setOpen] = useState(false);
@@ -29,9 +31,12 @@ const LoginForm = () => {
     })
     .then(response => response.json())
     .then(data => {
-      console.log(data); // Tutaj otrzymasz odpowiedź, np. token JWT lub komunikat o błędzie
-      setOpen(false); // Zamknij okno dialogowe po udanym zalogowaniu
-      // Tutaj możesz przekierować użytkownika lub zaktualizować stan aplikacji na zalogowany
+      if (data.token) { // Sprawdź, czy odpowiedź zawiera token
+        login(username, data.token); // Zaloguj użytkownika za pomocą funkcji z kontekstu
+        setOpen(false); // Zamknij dialog logowania
+      } else {
+        throw new Error('Login failed');
+      }
     })
     .catch((error) => {
       console.error('Error:', error);
@@ -44,7 +49,7 @@ const LoginForm = () => {
       <Button color="primary" onClick={handleOpen}>Login</Button>
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
         <DialogTitle>
-          <Box textAlign="center" sx={{ marginTop: '20px' }}>
+          <Box textAlign="center">
             <AccountCircle style={{ fontSize: 120, color: '#fca311' }} />
             <Typography sx={{ color: '#fca311', fontSize: '6vh' }}>Login</Typography>
           </Box>
