@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Typography, Box, InputAdornment } from '@mui/material';
 import { AccountCircle, Lock } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const LoginForm = () => {
   const { login } = useAuth();
@@ -36,6 +38,7 @@ const LoginForm = () => {
       .then(data => {
         if (data.token) {
           login(username, data.token);
+          toast.success('Login successful!');
           setOpen(false);
         } else {
           throw new Error('Login failed');
@@ -43,6 +46,7 @@ const LoginForm = () => {
       })
       .catch(error => {
         console.error('Error:', error);
+        toast.error('Login failed: ' + error.message);
         setError('Login failed: ' + error.message);
       });
   };
@@ -110,6 +114,7 @@ const LoginForm = () => {
           <Button sx={{ fontSize: '1.25rem', minWidth: '150px' }} variant="contained" color="secondary" onClick={handleSubmit}>Login</Button>
         </DialogActions>
       </Dialog>
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </div>
   );
 };

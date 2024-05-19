@@ -5,7 +5,7 @@ import Categories from './Categories';
 import Restaurants from './Restaurants';
 import SelectedCategoryInfo from './SelectedCategoryInfo';
 
-const Main = () => {
+const Main = ({ onBasketClick, basketItems }) => {
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null); 
 
@@ -20,8 +20,8 @@ const Main = () => {
 
   return (
     <>
-      <Navbar onSelectCity={handleSelectCity} />
-      <Container maxWidth="lg" align="left" sx={{ my: 4, ml: 4 }}>
+      <Navbar onSelectCity={handleSelectCity} onBasketClick={onBasketClick} basketItems={basketItems} showCitySelect={true} />
+      <Container maxWidth="lg" align="left" sx={{ my: 4, ml: 4, mt: 12 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Restauracje - {selectedCity ? selectedCity : 'Wybierz miasto'}
         </Typography>

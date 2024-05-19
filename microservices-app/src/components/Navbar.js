@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, TextField, Box, Typography, Select, MenuItem, FormControl, InputLabel, Autocomplete, IconButton, Menu, ListItemIcon, Hidden, Drawer, List, ListItem, ListItemText, Badge } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -10,24 +10,24 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import logo from '../images/logo.png';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
-import Basket from './Basket'; // Import koszyka
 import { useAuth } from '../context/AuthContext';
 
-const Navbar = ({ onSelectCity }) => {
+const Navbar = ({ onSelectCity, onBasketClick, basketItems = [], showCitySelect }) => {
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState('');
   const [restaurantNames, setRestaurantNames] = useState([]);
   const { isAuthenticated, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [basketAnchorEl, setBasketAnchorEl] = useState(null); // Dodano stan dla koszyka
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5000/cities')
-      .then(response => response.json())
-      .then(data => setCities(data))
-      .catch(error => console.error('Error:', error));
-  }, []);
+    if (showCitySelect) {
+      fetch('http://localhost:5000/cities')
+        .then(response => response.json())
+        .then(data => setCities(data))
+        .catch(error => console.error('Error:', error));
+    }
+  }, [showCitySelect]);
 
   useEffect(() => {
     if (selectedCity) {
@@ -44,7 +44,9 @@ const Navbar = ({ onSelectCity }) => {
   const handleChangeCity = (event) => {
     const selectedValue = event.target.value;
     setSelectedCity(selectedValue);
-    onSelectCity(selectedValue);
+    if (onSelectCity) {
+      onSelectCity(selectedValue);
+    }
   };
 
   const handleMenu = (event) => {
@@ -59,33 +61,27 @@ const Navbar = ({ onSelectCity }) => {
     setMobileOpen(!mobileOpen);
   };
 
-  const handleBasket = (event) => {
-    setBasketAnchorEl(event.currentTarget);
-  };
-
-  const handleBasketClose = () => {
-    setBasketAnchorEl(null);
-  };
-
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center', width: 280 }}>
       <Typography variant="h6" sx={{ my: 2 }}>
         ÜberEatz
       </Typography>
-      <FormControl sx={{ m: 1, minWidth: 180 }} size="small">
-        <InputLabel id="city-select-label">City</InputLabel>
-        <Select
-          labelId="city-select-label"
-          id="city-select"
-          value={selectedCity}
-          label="City"
-          onChange={handleChangeCity}
-        >
-          {cities.map((city, index) => (
-            <MenuItem key={index} value={city.city}>{city.city}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      {showCitySelect && (
+        <FormControl sx={{ m: 1, minWidth: 180 }} size="small">
+          <InputLabel id="city-select-label">City</InputLabel>
+          <Select
+            labelId="city-select-label"
+            id="city-select"
+            value={selectedCity}
+            label="City"
+            onChange={handleChangeCity}
+          >
+            {cities.map((city, index) => (
+              <MenuItem key={index} value={city.city}>{city.city}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
       <List>
         {isAuthenticated ? (
           <>
@@ -123,30 +119,32 @@ const Navbar = ({ onSelectCity }) => {
   );
 
   return (
-    <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: '1px solid #e0e0e0' }}>
+    <AppBar position="fixed" color="inherit" elevation={0} sx={{ borderBottom: '1px solid #e0e0e0', zIndex: 1400 }}>
       <Toolbar sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <a href='https://pl.wikipedia.org/wiki/Ziemniak'>
+          <a href='/'>
             <img src={logo} alt="Logo" style={{ height: '50px' }} />
           </a>
           <Typography variant="h5" noWrap sx={{ marginLeft: 1, display: { xs: 'none', sm: 'block' } }}>
             ÜberEatz
           </Typography>
-          <FormControl sx={{ m: 1, minWidth: 150, display: { xs: 'none', md: 'block' }, marginLeft: 5 }} size="small">
-            <InputLabel id="city-select-label">City</InputLabel>
-            <Select
-              labelId="city-select-label"
-              id="city-select"
-              value={selectedCity}
-              label="City"
-              onChange={handleChangeCity}
-              sx={{ minWidth: 120 }}
-            >
-              {cities.map((city, index) => (
-                <MenuItem key={index} value={city.city}>{city.city}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {showCitySelect && (
+            <FormControl sx={{ m: 1, minWidth: 150, display: { xs: 'none', md: 'block' }, marginLeft: 5 }} size="small">
+              <InputLabel id="city-select-label">City</InputLabel>
+              <Select
+                labelId="city-select-label"
+                id="city-select"
+                value={selectedCity}
+                label="City"
+                onChange={handleChangeCity}
+                sx={{ minWidth: 120 }}
+              >
+                {cities.map((city, index) => (
+                  <MenuItem key={index} value={city.city}>{city.city}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </Box>
         
         <Autocomplete
@@ -183,12 +181,11 @@ const Navbar = ({ onSelectCity }) => {
           <Hidden mdDown>
             {isAuthenticated ? (
               <>
-                <IconButton onClick={handleBasket} color="inherit">
-                  <Badge badgeContent={4} color="error"> {/* Przykładowa liczba przedmiotów */}
+                <IconButton onClick={onBasketClick} color="inherit">
+                  <Badge badgeContent={basketItems.length} color="error">
                     <ShoppingCartIcon sx={{ fontSize: 30 }} />
                   </Badge>
                 </IconButton>
-                <Basket anchorEl={basketAnchorEl} onClose={handleBasketClose} />
                 <IconButton onClick={handleMenu} color="inherit">
                   <AccountCircleIcon sx={{ fontSize: 30 }} />
                 </IconButton>
@@ -229,11 +226,11 @@ const Navbar = ({ onSelectCity }) => {
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
+            keepMounted: true,
           }}
           sx={{
             display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 280 } // Increased width
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 280 }
           }}
         >
           {drawer}

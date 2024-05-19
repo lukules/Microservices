@@ -1,9 +1,8 @@
 const express = require('express');
-const { Pool } = require('pg'); 
+const { Pool } = require('pg');
 const cors = require('cors');
 const app = express();
 const PORT = 5000;
-
 
 const pool = new Pool({
   user: 'postgres',
@@ -16,7 +15,6 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 
-
 app.get('/cities', async (req, res) => {
   try {
     const queryResult = await pool.query('SELECT city FROM restaurants GROUP BY city');
@@ -26,9 +24,6 @@ app.get('/cities', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
-
-
-
 
 app.get('/categories', async (req, res) => {
   try {
@@ -63,9 +58,6 @@ app.get('/categories', async (req, res) => {
   }
 });
 
-
-
-
 app.get('/restaurants', async (req, res) => {
   try {
     const { city } = req.query;
@@ -91,8 +83,6 @@ app.get('/restaurants', async (req, res) => {
   }
 });
 
-
-
 app.get('/categoryrestaurants', async (req, res) => {
   try {
     const { city, category } = req.query;
@@ -108,8 +98,21 @@ app.get('/categoryrestaurants', async (req, res) => {
   }
 });
 
-
-
+app.get('/menu', async (req, res) => {
+  const { restaurant } = req.query;
+  try {
+    const restaurantQuery = await pool.query('SELECT restaurant_id FROM restaurants WHERE name = $1', [restaurant]);
+    if (restaurantQuery.rows.length === 0) {
+      return res.status(404).json({ message: 'Restaurant not found' });
+    }
+    const restaurantId = restaurantQuery.rows[0].restaurant_id;
+    const menuItemsQuery = await pool.query('SELECT item_name, category, price FROM menu_items WHERE restaurant_id = $1', [restaurantId]);
+    res.json(menuItemsQuery.rows);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).send('Server Error');
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
