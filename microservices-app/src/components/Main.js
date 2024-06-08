@@ -5,7 +5,7 @@ import Categories from './Categories';
 import Restaurants from './Restaurants';
 import SelectedCategoryInfo from './SelectedCategoryInfo';
 
-const Main = ({ onBasketClick, basketItems }) => {
+const Main = ({ onBasketClick, basketItems, onOverlayToggle }) => { // Accept onOverlayToggle prop
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null); 
 
@@ -20,7 +20,13 @@ const Main = ({ onBasketClick, basketItems }) => {
 
   return (
     <>
-      <Navbar onSelectCity={handleSelectCity} onBasketClick={onBasketClick} basketItems={basketItems} showCitySelect={true} />
+      <Navbar
+        onSelectCity={handleSelectCity}
+        onBasketClick={onBasketClick}
+        basketItems={basketItems}
+        showCitySelect={true}
+        onOverlayToggle={onOverlayToggle} // Pass onOverlayToggle to Navbar
+      />
       <Container maxWidth="lg" align="left" sx={{ my: 4, ml: 4, mt: 12 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Restauracje - {selectedCity ? selectedCity : 'Wybierz miasto'}

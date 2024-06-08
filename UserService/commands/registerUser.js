@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const pool = require('../db');
 
 const registerUser = async (req, res) => {
-  const { username, password, firstName, lastName, dob, email, phone } = req.body;
+  const { username, password, firstName, lastName, dob, email, phone, city, street, postalCode } = req.body;
   try {
     const existingUser = await pool.query('SELECT * FROM users WHERE email = $1 OR phone = $2 OR username = $3', [email, phone, username]);
     if (existingUser.rows.length > 0) {
@@ -11,8 +11,8 @@ const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await pool.query(
-      'INSERT INTO users (username, password, firstname, lastname, dob, email, phone) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', 
-      [username, hashedPassword, firstName, lastName, dob, email, phone]
+      'INSERT INTO users (username, password, firstname, lastname, dob, email, phone, city, street, postalCode) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *', 
+      [username, hashedPassword, firstName, lastName, dob, email, phone, city, street, postalCode]
     );
     res.json(newUser.rows[0]);
   } catch (err) {
