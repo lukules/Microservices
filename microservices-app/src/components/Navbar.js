@@ -21,7 +21,7 @@ const Navbar = ({ onSelectCity, onBasketClick, basketItems = [], showCitySelect 
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState('');
   const [restaurantNames, setRestaurantNames] = useState([]);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth(); // Get user object
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -137,6 +137,7 @@ const Navbar = ({ onSelectCity, onBasketClick, basketItems = [], showCitySelect 
     <>
       <AppBar position="fixed" color="inherit" elevation={0} sx={{ borderBottom: '1px solid #e0e0e0', zIndex: 1400 }}>
         <Toolbar sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Logo and Title */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <a href='/'>
               <img src={logo} alt="Logo" style={{ height: '50px' }} />
@@ -144,50 +145,56 @@ const Navbar = ({ onSelectCity, onBasketClick, basketItems = [], showCitySelect 
             <Typography variant="h5" noWrap sx={{ marginLeft: 1, display: { xs: 'none', sm: 'block' } }}>
               ÜberEatz
             </Typography>
-            {showCitySelect && (
-              <FormControl sx={{ m: 1, minWidth: 150, display: { xs: 'none', md: 'block' }, marginLeft: 5 }} size="small">
-                <InputLabel id="city-select-label">City</InputLabel>
-                <Select
-                  labelId="city-select-label"
-                  id="city-select"
-                  value={selectedCity}
-                  label="City"
-                  onChange={handleChangeCity}
-                  sx={{ minWidth: 120 }}
-                >
-                  {cities.map((city, index) => (
-                    <MenuItem key={index} value={city.city}>{city.city}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
           </Box>
-          
-          <Autocomplete
-            freeSolo
-            id="restaurant-search"
-            disableClearable
-            options={restaurantNames}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Search restaurants"
-                variant="outlined"
-                size="small"
-                sx={{ '.MuiOutlinedInput-root': { borderRadius: '30px' }, input: { padding: '10px 14px' }, width: { xs: 300, sm: 400, md: 600 } }}
-                InputProps={{
-                  ...params.InputProps,
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                  type: 'search',
-                }}
-              />
-            )}
-          />
 
+          {/* Conditional elements based on user role */}
+          {!(user && user.role === 'courier') && ( // Show only if NOT a courier
+            <>
+              {showCitySelect && (
+                <FormControl sx={{ m: 1, minWidth: 150, display: { xs: 'none', md: 'block' }, marginLeft: 5 }} size="small">
+                  <InputLabel id="city-select-label">City</InputLabel>
+                  <Select
+                    labelId="city-select-label"
+                    id="city-select"
+                    value={selectedCity}
+                    label="City"
+                    onChange={handleChangeCity}
+                    sx={{ minWidth: 120 }}
+                  >
+                    {cities.map((city, index) => (
+                      <MenuItem key={index} value={city.city}>{city.city}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
+              <Autocomplete
+                freeSolo
+                id="restaurant-search"
+                disableClearable
+                options={restaurantNames}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Search restaurants"
+                    variant="outlined"
+                    size="small"
+                    sx={{ '.MuiOutlinedInput-root': { borderRadius: '30px' }, input: { padding: '10px 14px' }, width: { xs: 300, sm: 400, md: 600 } }}
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                      type: 'search',
+                    }}
+                  />
+                )}
+              />
+            </>
+          )}
+          {/* User Actions (Login, Register, Profile, Logout) */}
           <Box sx={{ display: 'flex', alignItems: 'center', '& > :not(style)': { mr: 2 } }}>
             <Hidden mdUp>
               <IconButton color="inherit" aria-label="open drawer" edge="start" onClick={handleDrawerToggle} sx={{ ml: 1 }}>
@@ -197,11 +204,13 @@ const Navbar = ({ onSelectCity, onBasketClick, basketItems = [], showCitySelect 
             <Hidden mdDown>
               {isAuthenticated ? (
                 <>
-                  <IconButton onClick={onBasketClick} color="inherit">
-                    <Badge badgeContent={basketItems.length} color="error">
-                      <ShoppingCartIcon sx={{ fontSize: 30 }} />
-                    </Badge>
-                  </IconButton>
+                  {!(user && user.role === 'courier') && ( // Show basket only if NOT a courier
+                    <IconButton onClick={onBasketClick} color="inherit">
+                      <Badge badgeContent={basketItems.length} color="error">
+                        <ShoppingCartIcon sx={{ fontSize: 30 }} />
+                      </Badge>
+                    </IconButton>
+                  )}
                   <IconButton onClick={handleMenu} color="inherit">
                     <AccountCircleIcon sx={{ fontSize: 30 }} />
                   </IconButton>
