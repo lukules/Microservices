@@ -1,7 +1,7 @@
 Uber Eats-like Food Delivery Microservices Application
 Project Overview
 
-This project is a simplified version of a food delivery system like Uber Eats, where users can browse restaurants, add items to their basket, and place orders. The architecture follows a microservices-based approach, where each service handles a specific domain, ensuring scalability, modularity, and independent development.
+This project is a simplified version of a food delivery system like Uber Eats, where users can browse restaurants, add items to their basket, and place orders. The architecture follows a microservices-based approach, where each service handles a specific domain, ensuring scalability, modularity, and independent development. Data was scrapped from Wolt site.
 Key Features
 
     User Authentication: Users can register, login, and authenticate using JSON Web Tokens (JWT).
